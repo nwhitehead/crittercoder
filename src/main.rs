@@ -36,7 +36,9 @@ fn main() -> io::Result<()> {
             .padding(Padding::symmetric(2, 1))
     );
 
-    let mut statusarea = Paragraph::new("Status")
+    let mut output_area = Paragraph::new("OUTPUT");
+
+    let mut status_area = Paragraph::new("Status")
         .block(Block::new()
             .style(Style::default().bg(Color::from_u32(0x00141414)).fg(Color::White).add_modifier(Modifier::BOLD))
             .borders(Borders::NONE)
@@ -69,7 +71,8 @@ fn main() -> io::Result<()> {
                 .split(outer_layout[0]);
 
             f.render_widget(&textarea, left_layout[1]);
-            f.render_widget(&statusarea, outer_layout[1]);
+            f.render_widget(&output_area, outer_layout[0]);
+            f.render_widget(&status_area, outer_layout[1]);
         })?;
         let inp = ratatui::crossterm::event::read()?;
         let inp_r: tui_textarea::Input = inp.clone().into();
