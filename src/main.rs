@@ -23,8 +23,7 @@ fn main() -> io::Result<()> {
 
     let mut textarea = TextArea::default();
     textarea.set_max_histories(1000);
-    textarea.set_line_number_style(Style::default().fg(Color::Gray).add_modifier(Modifier::DIM));
-    //textarea.set_cursor_line_style(Style::default().add_modifier(Modifier::ITALIC));
+    // Make the current line just be normal (could also make it bold, italic, or bg color or something here)
     textarea.set_cursor_line_style(Style::default());
     textarea.set_block(
         Block::default()
@@ -33,6 +32,11 @@ fn main() -> io::Result<()> {
     );
 
     loop {
+        // Show line numbers if there is more than 1 line
+        textarea.remove_line_number();
+        if textarea.lines().len() > 1 {
+            textarea.set_line_number_style(Style::default().fg(Color::Gray).add_modifier(Modifier::DIM));
+        }
         term.draw(|f| {
             f.render_widget(&textarea, f.area());
         })?;
@@ -40,13 +44,19 @@ fn main() -> io::Result<()> {
         let inp_r: tui_textarea::Input = inp.clone().into();
         match inp {
             ratatui::crossterm::event::Event::Key(KeyEvent { code: KeyCode::Esc, ..}) => break,
+            // ALT-ENTER always submits
+            Event::Key(KeyEvent { code: KeyCode::Enter, modifiers: KeyModifiers::ALT, ..}) => {
+                break
+            }
             Event::Key(KeyEvent { code: KeyCode::Enter, ..}) => {
                 if textarea.lines().len() == 1 {
+                    // ENTER on single line input submits
                     break
                 } else {
                     textarea.input(inp_r);
                 }
             },
+            // CTRL-J is translated to ENTER, use to press ENTER without submit
             Event::Key(KeyEvent { code: KeyCode::Char('j'), modifiers: KeyModifiers::CONTROL, ..}) => {
                 textarea.input(Input { key: Key::Enter, ctrl: false, alt: false, shift: false });
             }
