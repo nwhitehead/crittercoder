@@ -58,8 +58,17 @@ fn main() -> io::Result<()> {
                     Constraint::Min(40),
                 ])
                 .split(f.area());
+            let input_vsize = textarea.lines().len() + 2;
+            let input_vsize = input_vsize.clamp(3, 10) as u16;
+            let left_layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(vec![
+                    Constraint::Fill(1),
+                    Constraint::Length(input_vsize),
+                ])
+                .split(outer_layout[0]);
 
-            f.render_widget(&textarea, outer_layout[0]);
+            f.render_widget(&textarea, left_layout[1]);
             f.render_widget(&statusarea, outer_layout[1]);
         })?;
         let inp = ratatui::crossterm::event::read()?;
