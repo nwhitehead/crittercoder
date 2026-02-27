@@ -1,10 +1,13 @@
-use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
-use crossterm::terminal::{
+use ratatui::crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+
+use ratatui::crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use ratatui::backend::CrosstermBackend;
 use ratatui::widgets::{Block, Borders};
 use ratatui::Terminal;
+use ratatui::crossterm::event::{Event, KeyEvent, KeyCode, KeyModifiers};
+
 use std::io;
 use tui_textarea::{Input, Key, TextArea};
 use ratatui::style::{Style, Color, Modifier};
@@ -14,7 +17,7 @@ fn main() -> io::Result<()> {
     let mut stdout = stdout.lock();
 
     enable_raw_mode()?;
-    crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    ratatui::crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut term = Terminal::new(backend)?;
 
@@ -34,24 +37,27 @@ fn main() -> io::Result<()> {
             f.render_widget(&textarea, f.area());
         })?;
         let inp = ratatui::crossterm::event::read()?;
-        let inp_r: tui_textarea::Input = inp.into();
-        match inp_r {
-            Input { key: Key::Esc, .. } => break,
-            input @Input { key: Key::Enter, .. } => {
+        let inp_r: tui_textarea::Input = inp.clone().into();
+        match inp {
+            ratatui::crossterm::event::Event::Key(KeyEvent { code: KeyCode::Esc, ..}) => break,
+            Event::Key(KeyEvent { code: KeyCode::Enter, ..}) => {
                 if textarea.lines().len() == 1 {
                     break
                 } else {
-                    textarea.input(input);
+                    textarea.input(inp_r);
                 }
             },
-            input => {
-                textarea.input(input);
+            Event::Key(KeyEvent { code: KeyCode::Char('j'), modifiers: KeyModifiers::CONTROL, ..}) => {
+                textarea.input(Input { key: Key::Enter, ctrl: false, alt: false, shift: false });
+            }
+            _ => {
+                textarea.input(inp_r);
             }
         }
     }
 
     disable_raw_mode()?;
-    crossterm::execute!(
+    ratatui::crossterm::execute!(
         term.backend_mut(),
         LeaveAlternateScreen,
         DisableMouseCapture
