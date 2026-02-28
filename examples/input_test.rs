@@ -1,13 +1,12 @@
 use std::io;
 
-use crossterm::event::{read, Event, KeyEvent, KeyCode};
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use crossterm::event::{Event, KeyCode, KeyEvent, read};
 use crossterm::terminal::{
-    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+    EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     let stdout = io::stdout();
     let mut stdout = stdout.lock();
 
@@ -19,7 +18,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let inp = read()?;
         println!("{:?}\r", inp);
         match inp {
-            Event::Key(KeyEvent { code: KeyCode::Esc, ..}) => {
+            Event::Key(KeyEvent {
+                code: KeyCode::Esc, ..
+            }) => {
                 break;
             }
             _ => {}
