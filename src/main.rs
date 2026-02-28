@@ -13,20 +13,10 @@ use std::io;
 use tui_textarea::{Input, Key, TextArea};
 use ratatui::style::{Style, Color, Modifier};
 
-fn main() -> io::Result<()> {
-    let stdout = io::stdout();
-    let mut stdout = stdout.lock();
-
-    enable_raw_mode()?;
-    ratatui::crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut term = Terminal::new(backend)?;
-
+fn fresh_input_textarea() -> TextArea<'static> {
     let mut textarea = TextArea::default();
     textarea.set_max_histories(1000);
-    // Make the current line just be normal (could also make it bold, italic, or bg color or something here)
     textarea.set_cursor_line_style(Style::default());
-
     textarea.set_block(
         Block::default()
             .style(Style::default().bg(Color::from_u32(0x00222222)).fg(Color::White))
@@ -35,15 +25,33 @@ fn main() -> io::Result<()> {
             .border_style(Style::default().fg(Color::from_u32(0x008888ff)))
             .padding(Padding::symmetric(2, 1))
     );
+    textarea
+}
 
-    let mut output_area = Paragraph::new("OUTPUT");
+fn submit(textarea: &mut TextArea, output: &mut Vec<String>) {
+    let v = textarea.lines().join("\n");
+    output.push(v);
+    *textarea = fresh_input_textarea();
+}
 
-    let mut status_area = Paragraph::new("Status")
-        .block(Block::new()
-            .style(Style::default().bg(Color::from_u32(0x00141414)).fg(Color::White).add_modifier(Modifier::BOLD))
-            .borders(Borders::NONE)
-            .padding(Padding::symmetric(2, 1))
-        );
+fn main() -> io::Result<()> {
+    let stdout = io::stdout();
+    let mut stdout = stdout.lock();
+    let mut output = vec![String::from("this is some output")];
+    for i in 0..100 {
+        let mut line = vec![];
+        for j in 0..100 {
+            line.push(format!("{} ", j * (i + 17)));
+        }
+        output.push(line.join(" "));
+    }
+
+    enable_raw_mode()?;
+    ratatui::crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut term = Terminal::new(backend)?;
+
+    let mut textarea = fresh_input_textarea();
 
     loop {
         // Show line numbers if there is more than 1 line
@@ -51,6 +59,15 @@ fn main() -> io::Result<()> {
         if textarea.lines().len() > 1 {
             textarea.set_line_number_style(Style::default().fg(Color::Gray).add_modifier(Modifier::DIM));
         }
+        let mut output_area = Paragraph::new(output.join("\n"));
+
+        let mut status_area = Paragraph::new("Status")
+            .block(Block::new()
+                .style(Style::default().bg(Color::from_u32(0x00141414)).fg(Color::White).add_modifier(Modifier::BOLD))
+                .borders(Borders::NONE)
+                .padding(Padding::symmetric(2, 1))
+            );
+
         term.draw(|f| {
 
             let outer_layout = Layout::default()
@@ -71,21 +88,22 @@ fn main() -> io::Result<()> {
                 .split(outer_layout[0]);
 
             f.render_widget(&textarea, left_layout[1]);
-            f.render_widget(&output_area, outer_layout[0]);
+            f.render_widget(&output_area, left_layout[0]);
             f.render_widget(&status_area, outer_layout[1]);
         })?;
+
         let inp = ratatui::crossterm::event::read()?;
         let inp_r: tui_textarea::Input = inp.clone().into();
         match inp {
             ratatui::crossterm::event::Event::Key(KeyEvent { code: KeyCode::Esc, ..}) => break,
             // ALT-ENTER always submits
             Event::Key(KeyEvent { code: KeyCode::Enter, modifiers: KeyModifiers::ALT, ..}) => {
-                break
+                submit(&mut textarea, &mut output)
             }
             Event::Key(KeyEvent { code: KeyCode::Enter, ..}) => {
                 if textarea.lines().len() == 1 {
                     // ENTER on single line input submits
-                    break
+                    submit(&mut textarea, &mut output)
                 } else {
                     textarea.input(inp_r);
                 }
