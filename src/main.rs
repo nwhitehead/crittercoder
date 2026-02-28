@@ -29,10 +29,11 @@ fn fresh_input_textarea() -> TextArea<'static> {
     textarea
 }
 
-fn submit(textarea: &mut TextArea, output: &mut Vec<String>) {
+fn submit(textarea: &mut TextArea, output: &mut Vec<String>, output_scroll: &mut i32) {
     let v = textarea.lines().join("\n");
     output.push(v);
     *textarea = fresh_input_textarea();
+    *output_scroll = i32::MAX;
 }
 
 fn main() -> io::Result<()> {
@@ -55,13 +56,24 @@ fn main() -> io::Result<()> {
     let mut textarea = fresh_input_textarea();
     let mut output_scroll: i32 = 0;
 
+    let mut output_rect = Rect::default();
     loop {
         // Show line numbers if there is more than 1 line
         textarea.remove_line_number();
         if textarea.lines().len() > 1 {
             textarea.set_line_number_style(Style::default().fg(Color::Gray).add_modifier(Modifier::DIM));
         }
-        let mut output_area = Paragraph::new(output.join("\n")).scroll((output_scroll as u16, 0));
+        let mut output_area = Paragraph::new(output.join("\n"));
+        // Clamp scroll in case things have changed in layout etc.
+        // Max scroll cannot be less than 0
+        let max_scroll = i32::max(0, output_area.line_count(output_rect.width) as i32 - output_rect.height as i32);
+        if output_scroll < 0 {
+            output_scroll = 0;
+        }
+        if output_scroll > max_scroll {
+            output_scroll = max_scroll;
+        }
+        output_area = output_area.scroll((output_scroll as u16, 0));
 
         let mut status_area = Paragraph::new("Status")
             .block(Block::new()
@@ -70,7 +82,6 @@ fn main() -> io::Result<()> {
                 .padding(Padding::symmetric(2, 1))
             );
 
-        let mut output_rect = Rect::default();
         term.draw(|f| {
 
             let outer_layout = Layout::default()
@@ -89,11 +100,11 @@ fn main() -> io::Result<()> {
                     Constraint::Length(input_vsize),
                 ])
                 .split(outer_layout[0]);
+            output_rect = left_layout[0].clone();
 
             f.render_widget(&textarea, left_layout[1]);
             f.render_widget(&output_area, left_layout[0]);
             f.render_widget(&status_area, outer_layout[1]);
-            output_rect = left_layout[0].clone();
         })?;
 
         let inp = ratatui::crossterm::event::read()?;
@@ -112,12 +123,12 @@ fn main() -> io::Result<()> {
             ratatui::crossterm::event::Event::Key(KeyEvent { code: KeyCode::Esc, ..}) => break,
             // ALT-ENTER always submits
             Event::Key(KeyEvent { code: KeyCode::Enter, modifiers: KeyModifiers::ALT, ..}) => {
-                submit(&mut textarea, &mut output)
+                submit(&mut textarea, &mut output, &mut output_scroll)
             }
             Event::Key(KeyEvent { code: KeyCode::Enter, ..}) => {
                 if textarea.lines().len() == 1 {
                     // ENTER on single line input submits
-                    submit(&mut textarea, &mut output)
+                    submit(&mut textarea, &mut output, &mut output_scroll)
                 } else {
                     textarea.input(inp_r);
                 }
@@ -129,15 +140,6 @@ fn main() -> io::Result<()> {
             _ => {
                 textarea.input(inp_r);
             }
-        }
-        // Clamp scroll in case things have changed in layout etc.
-        // Max scroll cannot be less than 0
-        let max_scroll = i32::max(0, output_area.line_count(output_rect.width) as i32 - output_rect.height as i32);
-        if output_scroll < 0 {
-            output_scroll = 0;
-        }
-        if output_scroll > max_scroll {
-            output_scroll = max_scroll;
         }
     }
 
