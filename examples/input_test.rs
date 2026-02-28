@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut stdout = stdout.lock();
 
     enable_raw_mode()?;
-    crossterm::execute!(stdout, EnterAlternateScreen)?;
+    crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
 
     loop {
         // Blocks until an `Event` is available
@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             _ => {}
         }
     }
-    crossterm::execute!(stdout, LeaveAlternateScreen)?;
+    crossterm::execute!(stdout, DisableMouseCapture, LeaveAlternateScreen)?;
     disable_raw_mode()?;
 
     Ok(())
