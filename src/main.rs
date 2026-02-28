@@ -8,11 +8,12 @@ use ratatui::widgets::{Block, Borders, BorderType, Padding, Paragraph};
 use ratatui::Terminal;
 use ratatui::crossterm::event::{Event, KeyEvent, MouseEventKind, MouseEvent, KeyCode, KeyModifiers};
 use ratatui::crossterm::event::MouseEventKind::{ ScrollDown, ScrollUp };
-use ratatui::prelude::*;
-
 use std::io;
 use tui_textarea::{Input, Key, TextArea};
 use ratatui::style::{Style, Color, Modifier};
+use ratatui::text::Text;
+use ratatui::prelude::*;
+
 
 fn fresh_input_textarea() -> TextArea<'static> {
     let mut textarea = TextArea::default();
@@ -48,6 +49,19 @@ fn main() -> io::Result<()> {
         output.push(line.join(" "));
     }
 
+    let markdown = r#"
+    This is a simple markdown renderer for Ratatui.
+
+    - List item 1
+    - List item 2
+
+    ```rust
+    fn main() {
+        println!("Hello, world!");
+    }
+    ```
+    "#;
+
     enable_raw_mode()?;
     ratatui::crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
@@ -63,7 +77,10 @@ fn main() -> io::Result<()> {
         if textarea.lines().len() > 1 {
             textarea.set_line_number_style(Style::default().fg(Color::Gray).add_modifier(Modifier::DIM));
         }
-        let mut output_area = Paragraph::new(output.join("\n"));
+        let mut output_markdown = tui_markdown::from_str(markdown);
+        //let mut output_area = Paragraph::new(output.join("\n"));
+
+        let mut output_area = Paragraph::new(output_markdown);
         // Clamp scroll in case things have changed in layout etc.
         // Max scroll cannot be less than 0
         let max_scroll = i32::max(0, output_area.line_count(output_rect.width) as i32 - output_rect.height as i32);
