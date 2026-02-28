@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 crossterm = { version= "0.29.0", features = ["events"] }
 ratatui = { version = "0.29.0", features = ["unstable-rendered-line-info"] }
+tui-markdown = "0.3.7"
 tui-textarea = { git = "https://github.com/rhysd/tui-textarea.git" }
 
 [[example]]
