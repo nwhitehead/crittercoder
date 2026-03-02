@@ -17,6 +17,10 @@ use std::io;
 use tui_markdown::StyleSheet;
 use tui_markdown::{DefaultStyleSheet, Options, from_str_with_options};
 use tui_textarea::{Input, Key, TextArea};
+use ratatui_themes::{Theme, ThemeName, ThemePalette};
+
+// use std::collections::HashMap;
+// type AppTheme = HashMap<String, Style>;
 
 fn fresh_input_textarea() -> TextArea<'static> {
     let mut textarea = TextArea::default();
@@ -45,49 +49,59 @@ fn submit(textarea: &mut TextArea, output: &mut Vec<String>, output_scroll: &mut
 }
 
 #[derive(Debug, Clone)]
-struct MyStyleSheet;
+struct AppStyleSheet {
+    palette: ThemePalette,
+}
 
-impl StyleSheet for MyStyleSheet {
+impl AppStyleSheet {
+    fn new(theme: Theme) -> Self {
+        Self { palette: theme.palette() }
+    }
+}
+
+impl StyleSheet for AppStyleSheet {
     fn heading(&self, level: u8) -> Style {
+        let orig_accent = Color::from_u32(0x009679bd);
+        let accent = self.palette.accent;
         match level {
-            1 => Style::new().fg(Color::from_u32(0x009679bd)).reversed(),
-            2 => Style::new().fg(Color::from_u32(0x009679bd)).bold(),
-            3 => Style::new().fg(Color::from_u32(0x009679bd)),
-            4 => Style::new().fg(Color::from_u32(0x009679bd)).italic(),
-            _ => Style::new().fg(Color::from_u32(0x009679bd)),
+            1 => Style::new().fg(accent).reversed(),
+            2 => Style::new().fg(accent).bold(),
+            3 => Style::new().fg(accent),
+            4 => Style::new().fg(accent).italic(),
+            _ => Style::new().fg(accent),
         }
     }
 
     fn code(&self) -> Style {
-        Style::new().white().on_dark_gray()
+        Style::new().fg(self.palette.fg)
     }
 
     fn link(&self) -> Style {
-        Style::new().blue().underlined()
+        Style::new().fg(self.palette.accent).underlined()
     }
 
     fn blockquote(&self) -> Style {
-        Style::new().yellow()
+        Style::new().fg(self.palette.secondary)
     }
 
     fn heading_meta(&self) -> Style {
-        Style::new().dim()
+        Style::new().fg(self.palette.muted)
     }
 
     fn metadata_block(&self) -> Style {
-        Style::new().light_yellow()
+        Style::new().fg(self.palette.info)
     }
 
     fn image_alt(&self) -> Style {
-        Style::new().dim().italic()
+        Style::new().fg(self.palette.muted).italic()
     }
 
     fn table_header(&self) -> Style {
-        Style::new().bold().cyan()
+        Style::new().bold().fg(self.palette.secondary)
     }
 
     fn table_border(&self) -> Style {
-        Style::new().dark_gray()
+        Style::new().fg(self.palette.muted)
     }
 }
 
@@ -104,14 +118,26 @@ fn main() -> io::Result<()> {
     }
 
     let markdown = r#"
+---
+title: Metadata is formatted like this
+author: me
+---
 # Title
 
-## Section title
+## Section title {blah}
 
 This is a *simple* markdown renderer for Ratatui.
 
+|one  | two|
+|-----|----|
+|data |data|
+
 - List item 1
 - List item 2
+
+> Quote from someone.
+
+This is [a link](http://www.example.com/blah).
 
 ### Code Sample
 
@@ -151,7 +177,8 @@ The $x$ in the $x^2$ is not $5$.
                 Style::default().fg(Color::Gray).add_modifier(Modifier::DIM),
             );
         }
-        let md_options = Options::new(MyStyleSheet)
+        let theme = Theme::new(ThemeName::OneDarkPro);
+        let md_options = Options::new(AppStyleSheet::new(theme))
             .with_show_math_marks(false)
             .with_show_header_marks(false)
             .with_show_code_fence(false)
