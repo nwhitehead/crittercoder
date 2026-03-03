@@ -19,9 +19,6 @@ use tui_markdown::{DefaultStyleSheet, Options, from_str_with_options};
 use tui_textarea::{Input, Key, TextArea};
 use ratatui_themes::{Theme, ThemeName, ThemePalette};
 
-// use std::collections::HashMap;
-// type AppTheme = HashMap<String, Style>;
-
 fn fresh_input_textarea() -> TextArea<'static> {
     let mut textarea = TextArea::default();
     textarea.set_max_histories(1000);
@@ -153,6 +150,9 @@ The $x$ in the $x^2$ is not $5$.
 
 "#;
 
+    let cat_image: &[u8] = include_bytes!("../resources/cat.ansi");
+    let cat_string: String = String::from_utf8(cat_image.to_vec()).expect("cat must be valid utf-8");
+
     enable_raw_mode()?;
     ratatui::crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
@@ -170,13 +170,14 @@ The $x$ in the $x^2$ is not $5$.
     let history_index = history.len();
 
     loop {
-        // Show line numbers if there is more than 1 line
+        // Show line numbers in input if there is more than 1 line
         textarea.remove_line_number();
         if textarea.lines().len() > 1 {
             textarea.set_line_number_style(
                 Style::default().fg(Color::Gray).add_modifier(Modifier::DIM),
             );
         }
+
         let theme = Theme::new(ThemeName::OneDarkPro);
         let md_options = Options::new(AppStyleSheet::new(theme))
             .with_show_math_marks(false)
@@ -220,12 +221,14 @@ The $x$ in the $x^2$ is not $5$.
         term.draw(|f| {
             let outer_layout = Layout::default()
                 .direction(Direction::Horizontal)
+                .spacing(1)
                 .constraints(vec![Constraint::Percentage(100), Constraint::Min(40)])
                 .split(f.area());
             let input_vsize = textarea.lines().len() + 2;
             let input_vsize = input_vsize.clamp(3, 10) as u16;
             let left_layout = Layout::default()
                 .direction(Direction::Vertical)
+                .spacing(1)
                 .constraints(vec![Constraint::Fill(1), Constraint::Length(input_vsize)])
                 .split(outer_layout[0]);
             output_rect = left_layout[0].clone();
