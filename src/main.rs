@@ -19,6 +19,13 @@ use tui_markdown::{DefaultStyleSheet, Options, from_str_with_options};
 use tui_textarea::{Input, Key, TextArea};
 use ratatui_themes::{Theme, ThemeName, ThemePalette};
 
+mod stylesheet;
+use stylesheet::AppStyleSheet;
+
+pub trait EventHandler {
+    fn handle(event: &ratatui::crossterm::event::Event) -> bool;
+}
+
 fn fresh_input_textarea() -> TextArea<'static> {
     let mut textarea = TextArea::default();
     textarea.set_max_histories(1000);
@@ -43,63 +50,6 @@ fn submit(textarea: &mut TextArea, output: &mut Vec<String>, output_scroll: &mut
     output.push(v);
     *textarea = fresh_input_textarea();
     *output_scroll = i32::MAX;
-}
-
-#[derive(Debug, Clone)]
-struct AppStyleSheet {
-    palette: ThemePalette,
-}
-
-impl AppStyleSheet {
-    fn new(theme: Theme) -> Self {
-        Self { palette: theme.palette() }
-    }
-}
-
-impl StyleSheet for AppStyleSheet {
-    fn heading(&self, level: u8) -> Style {
-        let orig_accent = Color::from_u32(0x009679bd);
-        let accent = self.palette.accent;
-        match level {
-            1 => Style::new().fg(accent).reversed(),
-            2 => Style::new().fg(accent).bold(),
-            3 => Style::new().fg(accent),
-            4 => Style::new().fg(accent).italic(),
-            _ => Style::new().fg(accent),
-        }
-    }
-
-    fn code(&self) -> Style {
-        Style::new().fg(self.palette.fg)
-    }
-
-    fn link(&self) -> Style {
-        Style::new().fg(self.palette.accent).underlined()
-    }
-
-    fn blockquote(&self) -> Style {
-        Style::new().fg(self.palette.secondary)
-    }
-
-    fn heading_meta(&self) -> Style {
-        Style::new().fg(self.palette.muted)
-    }
-
-    fn metadata_block(&self) -> Style {
-        Style::new().fg(self.palette.info)
-    }
-
-    fn image_alt(&self) -> Style {
-        Style::new().fg(self.palette.muted).italic()
-    }
-
-    fn table_header(&self) -> Style {
-        Style::new().bold().fg(self.palette.secondary)
-    }
-
-    fn table_border(&self) -> Style {
-        Style::new().fg(self.palette.muted)
-    }
 }
 
 fn main() -> io::Result<()> {
