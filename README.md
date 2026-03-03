@@ -1,5 +1,7 @@
 # CritterCoder
 
+<img src="resources/cat.png" style="width:80px; aspect-ratio: fixed; image-rendering: pixelated;" alt="Small orange and white cat.">
+
 > [!WARNING]
 > In development, not done!
 
