@@ -1,6 +1,6 @@
-use std::io::Cursor;
+use image::{ImageReader, Pixel, RgbaImage};
 use ratatui::prelude::*;
-use image::{ImageReader, GenericImageView, RgbaImage, Pixel};
+use std::io::Cursor;
 
 pub struct Critter {
     img: RgbaImage,
@@ -8,7 +8,7 @@ pub struct Critter {
 
 impl Critter {
     pub fn new(data: Vec<u8>) -> Self {
-        let mut reader = ImageReader::new(Cursor::new(data))
+        let reader = ImageReader::new(Cursor::new(data))
             .with_guessed_format()
             .expect("Cursor IO never fails");
         let image = reader.decode().expect("Image is valid");
@@ -22,7 +22,7 @@ impl Widget for &Critter {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let (width, height) = self.img.dimensions();
         let mut rows = vec![];
-        for r in (0..height-1).step_by(2) {
+        for r in (0..height - 1).step_by(2) {
             let mut row = vec![];
             for c in 0..width {
                 let p_upper = self.img.get_pixel(c, r);

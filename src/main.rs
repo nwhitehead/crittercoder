@@ -1,35 +1,26 @@
 use ratatui::crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 
-use ratatui::Terminal;
-use ratatui::backend::CrosstermBackend;
-use ratatui::crossterm::event::MouseEventKind::{ScrollDown, ScrollUp};
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers, MouseEvent};
+use ratatui::crossterm::event::{
+    Event, KeyCode, KeyEvent, KeyModifiers, MouseEvent,
+    MouseEventKind::{ScrollDown, ScrollUp},
+};
 use ratatui::crossterm::terminal::{
     EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
 };
 use ratatui::prelude::*;
-use ratatui::style::{Color, Modifier, Style};
-use ratatui::text::Text;
 use ratatui::widgets::{Block, BorderType, Borders, Padding, Paragraph};
 use std::io;
 use tui_markdown::from_str_with_options;
 use tui_textarea::{Input, Key, TextArea};
 
-mod stylesheet;
 mod critter;
-use stylesheet::get_md_options;
+mod status;
+mod stylesheet;
 use critter::Critter;
+use stylesheet::get_md_options;
 
 pub trait EventHandler {
     fn handle(event: &ratatui::crossterm::event::Event) -> bool;
-}
-
-enum AgentStatus {
-    READY, WORKING, WAITING, BLOCKED,
-}
-
-struct StatusWidget {
-    agents: Vec<(String, AgentStatus)>,
 }
 
 fn fresh_input_textarea() -> TextArea<'static> {
