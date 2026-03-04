@@ -112,7 +112,7 @@ The $x$ in the $x^2$ is not $5$.
         history.push(format!("prompt {}", i));
     }
     //let history_index = history.len();
-    let critter = TextImage::new(include_bytes!("../resources/fox.png").to_vec());
+    let critter = TextImage::new(include_bytes!("../resources/mouse.png").to_vec());
 
     loop {
         // Show line numbers in input if there is more than 1 line
