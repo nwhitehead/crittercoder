@@ -1,8 +1,6 @@
-
-use ratatui::style::{Color, Modifier, Style};
-use tui_markdown::StyleSheet;
-use tui_markdown::{DefaultStyleSheet, Options, from_str_with_options};
+use ratatui::style::Style;
 use ratatui_themes::{Theme, ThemeName, ThemePalette};
+use tui_markdown::{Options, StyleSheet};
 
 #[derive(Debug, Clone)]
 pub struct AppStyleSheet {
@@ -11,13 +9,14 @@ pub struct AppStyleSheet {
 
 impl AppStyleSheet {
     pub fn new(theme: Theme) -> Self {
-        Self { palette: theme.palette() }
+        Self {
+            palette: theme.palette(),
+        }
     }
 }
 
 impl StyleSheet for AppStyleSheet {
     fn heading(&self, level: u8) -> Style {
-        let orig_accent = Color::from_u32(0x009679bd);
         let accent = self.palette.accent;
         match level {
             1 => Style::new().fg(accent).reversed(),

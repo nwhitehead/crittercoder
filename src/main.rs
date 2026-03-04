@@ -3,9 +3,7 @@ use ratatui::crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use ratatui::crossterm::event::MouseEventKind::{ScrollDown, ScrollUp};
-use ratatui::crossterm::event::{
-    Event, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind,
-};
+use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers, MouseEvent};
 use ratatui::crossterm::terminal::{
     EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
 };
@@ -14,10 +12,8 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::Text;
 use ratatui::widgets::{Block, BorderType, Borders, Padding, Paragraph};
 use std::io;
-use tui_markdown::StyleSheet;
-use tui_markdown::{DefaultStyleSheet, Options, from_str_with_options};
+use tui_markdown::from_str_with_options;
 use tui_textarea::{Input, Key, TextArea};
-use ratatui_themes::{Theme, ThemeName, ThemePalette};
 
 mod stylesheet;
 use stylesheet::get_md_options;
@@ -100,8 +96,9 @@ The $x$ in the $x^2$ is not $5$.
 
 "#;
 
-    let cat_image: &[u8] = include_bytes!("../resources/cat.ansi");
-    let cat_string: String = String::from_utf8(cat_image.to_vec()).expect("cat must be valid utf-8");
+    // let cat_image: &[u8] = include_bytes!("../resources/cat.ansi");
+    // let cat_string: String =
+    //     String::from_utf8(cat_image.to_vec()).expect("cat must be valid utf-8");
 
     enable_raw_mode()?;
     ratatui::crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -117,7 +114,7 @@ The $x$ in the $x^2$ is not $5$.
     for i in 0..100 {
         history.push(format!("prompt {}", i));
     }
-    let history_index = history.len();
+    //let history_index = history.len();
 
     loop {
         // Show line numbers in input if there is more than 1 line
@@ -129,7 +126,7 @@ The $x$ in the $x^2$ is not $5$.
         }
 
         let md_options = get_md_options();
-        let mut output_markdown = from_str_with_options(markdown, &md_options);
+        let output_markdown = from_str_with_options(markdown, &md_options);
         let mut lines = vec![];
         for line in output_markdown {
             lines.push(line);
@@ -151,7 +148,7 @@ The $x$ in the $x^2$ is not $5$.
         }
         output_area = output_area.scroll((output_scroll as u16, 0));
 
-        let mut status_area = Paragraph::new("Status").block(
+        let status_area = Paragraph::new("Status").block(
             Block::new()
                 .style(
                     Style::default()
@@ -190,7 +187,7 @@ The $x$ in the $x^2$ is not $5$.
                 kind: ScrollDown,
                 column,
                 row,
-                modifiers,
+                modifiers: _,
             }) => {
                 if output_rect.contains(Position { x: column, y: row }) {
                     output_scroll += 1;
@@ -200,7 +197,7 @@ The $x$ in the $x^2$ is not $5$.
                 kind: ScrollUp,
                 column,
                 row,
-                modifiers,
+                modifiers: _,
             }) => {
                 if output_rect.contains(Position { x: column, y: row }) {
                     output_scroll -= 1;
