@@ -1,4 +1,4 @@
-use ratatui::style::Style;
+use ratatui::prelude::*;
 use ratatui_themes::{Theme, ThemeName, ThemePalette};
 use tui_markdown::{Options, StyleSheet};
 
@@ -12,6 +12,16 @@ impl AppStyleSheet {
         Self {
             palette: theme.palette(),
         }
+    }
+
+    // App-specific parts of stylesheet
+    pub fn status(&self) -> Style {
+        Style::default()
+            .bg(Color::from_u32(0x00141414))
+            .fg(Color::White)
+    }
+    pub fn status_title(&self) -> Style {
+        Style::default().bold()
     }
 }
 
@@ -64,8 +74,12 @@ pub fn get_theme() -> Theme {
     Theme::new(ThemeName::OneDarkPro)
 }
 
+pub fn get_stylesheet() -> AppStyleSheet {
+    AppStyleSheet::new(get_theme())
+}
+
 pub fn get_md_options() -> Options<AppStyleSheet> {
-    Options::new(AppStyleSheet::new(get_theme()))
+    Options::new(get_stylesheet())
         .with_show_math_marks(false)
         .with_show_header_marks(false)
         .with_show_code_fence(false)

@@ -16,6 +16,7 @@ use tui_textarea::{Input, Key, TextArea};
 mod status;
 mod stylesheet;
 mod textimage;
+use status::StatusWidget;
 use stylesheet::get_md_options;
 use textimage::TextImage;
 
@@ -113,6 +114,7 @@ The $x$ in the $x^2$ is not $5$.
     }
     //let history_index = history.len();
     let critter = TextImage::new(include_bytes!("../resources/mouse.png").to_vec());
+    let status_widget = StatusWidget::new();
 
     loop {
         // Show line numbers in input if there is more than 1 line
@@ -146,18 +148,6 @@ The $x$ in the $x^2$ is not $5$.
         }
         output_area = output_area.scroll((output_scroll as u16, 0));
 
-        let status_area = Paragraph::new("Status").block(
-            Block::new()
-                .style(
-                    Style::default()
-                        .bg(Color::from_u32(0x00141414))
-                        .fg(Color::White)
-                        .add_modifier(Modifier::BOLD),
-                )
-                .borders(Borders::NONE)
-                .padding(Padding::symmetric(2, 1)),
-        );
-
         term.draw(|f| {
             let outer_layout = Layout::default()
                 .direction(Direction::Horizontal)
@@ -176,7 +166,7 @@ The $x$ in the $x^2$ is not $5$.
             f.render_widget(&textarea, left_layout[1]);
             f.render_widget(&critter, left_layout[0]);
             //f.render_widget(&output_area, left_layout[0]);
-            f.render_widget(&status_area, outer_layout[1]);
+            f.render_widget(&status_widget, outer_layout[1]);
         })?;
 
         let inp = ratatui::crossterm::event::read()?;
